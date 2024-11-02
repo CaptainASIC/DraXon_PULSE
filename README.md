@@ -15,7 +15,7 @@ PULSE is a Discord bot designed for emergency management and response coordinati
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YourOrg/pulse-bot
+git clone https://github.com/CaptainASIC/DraXon_PULSE
 cd pulse-bot
 ```
 
@@ -101,6 +101,8 @@ Logs are stored in the `logs` directory with daily rotation:
 4. Push to the branch
 5. Create a Pull Request
 
-## License
+## License 
 
-[MIT License](LICENSE)
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0). See the [LICENSE](LICENSE) file for details.\
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)

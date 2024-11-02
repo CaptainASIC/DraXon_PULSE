@@ -1,9 +1,10 @@
 # utils/database.py
 
 import sqlite3
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 import logging
 from pathlib import Path
+from datetime import datetime, timedelta
 from .constants import DB_FILE, DB_TABLES
 
 logger = logging.getLogger('PULSE.db')
@@ -66,3 +67,29 @@ class Database:
         except Exception as e:
             logger.error(f"Failed to log alert: {e}")
             raise
+
+    def get_alert_stats(self) -> Dict[str, int]:
+        """Get alert statistics"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # Get total alerts
+                cursor.execute("SELECT COUNT(*) FROM alerts")
+                total = cursor.fetchone()[0]
+                
+                # Get recent alerts (last 24 hours)
+                yesterday = datetime.now() - timedelta(days=1)
+                cursor.execute(
+                    "SELECT COUNT(*) FROM alerts WHERE timestamp > ?",
+                    (yesterday.strftime('%Y-%m-%d %H:%M:%S'),)
+                )
+                recent = cursor.fetchone()[0]
+                
+                return {
+                    'total': total,
+                    'recent': recent
+                }
+        except Exception as e:
+            logger.error(f"Failed to get alert stats: {e}")
+            return {'total': 0, 'recent': 0}

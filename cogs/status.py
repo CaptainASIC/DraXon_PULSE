@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 from datetime import datetime
 import logging
-from utils.constants import ROLE_HIERARCHY, APP_VERSION, BUILD_DATE
+from utils.constants import ROLE_HIERARCHY, APP_VERSION, BUILD_DATE, ABOUT_MESSAGE
 from utils.database import Database
 
 logger = logging.getLogger('PULSE.status')
@@ -105,6 +105,18 @@ class StatusCog(commands.Cog):
                 "⚠️ Failed to generate status report. Please try again.",
                 ephemeral=True
             )
+
+    @app_commands.command(name="pulse-about", description="Learn about DraXon PULSE and its features")
+    async def pulse_about(self, interaction: discord.Interaction):
+        """Display information about how to use the bot"""
+        embed = discord.Embed(
+            title="ℹ️ About DraXon PULSE",
+            description=ABOUT_MESSAGE,
+            color=discord.Color.blue()
+        )
+        embed.set_footer(text=f"Version {APP_VERSION} • Built {BUILD_DATE}")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        logger.info(f"About information displayed for {interaction.user.name}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusCog(bot))

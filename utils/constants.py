@@ -52,3 +52,17 @@ LOG_FILE = "logs/pulse_bot.log"
 # Bot configuration
 BOT_DESCRIPTION = "Planetary & Universal Locator System for Emergencies"
 COMMAND_PREFIX = "!"
+
+# About message
+ABOUT_MESSAGE = """
+DraXon PULSE (Planetary & Universal Locator System for Emergencies) is a specialized Discord bot designed to handle emergency alerts and coordinate responses across space stations and planetary colonies.
+
+**Key Features:**
+• Emergency Alert System
+• Real-time Status Monitoring
+• Staff Management System
+• Alert Statistics Tracking
+
+Use `/pulse-status` to check system status and statistics.
+Use `/emergency` to report an emergency situation.
+"""

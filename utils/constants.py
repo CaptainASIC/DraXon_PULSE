@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 # Version info
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 BUILD_DATE = "Nov 2024"
 
 # Role configuration
@@ -15,8 +15,8 @@ class RoleLevel(Enum):
     RESTRICTED = "restricted"
 
 ROLE_HIERARCHY: Dict[RoleLevel, List[str]] = {
-    RoleLevel.LEADERSHIP: ['Chairman', 'Director'],
-    RoleLevel.MANAGEMENT: ['Manager', 'Team Leader'],
+    RoleLevel.LEADERSHIP: ['Magnate', 'Chairman'],
+    RoleLevel.MANAGEMENT: ['Executive', 'Team Leader'],
     RoleLevel.STAFF: ['Employee'],
     RoleLevel.RESTRICTED: ['Applicant']
 }

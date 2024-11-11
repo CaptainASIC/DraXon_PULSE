@@ -27,10 +27,10 @@ class StatusCog(commands.Cog):
     @app_commands.command(name="pulse-status", description="Check PULSE system status")
     async def pulse_status(self, interaction: discord.Interaction):
         """Command to check bot status and statistics"""
-        # Check if user has Chairman role
-        if not any(role.name == 'Chairman' for role in interaction.user.roles):
+        # Check if user has Magnate role
+        if not any(role.name == 'Magnate' for role in interaction.user.roles):
             await interaction.response.send_message(
-                "⚠️ Only Chairman can view system status.",
+                "⚠️ Only Magnate can view system status.",
                 ephemeral=True
             )
             return

@@ -39,10 +39,10 @@ class SetupCog(commands.Cog):
     @app_commands.describe(channel="Select the channel for emergency alerts")
     async def setup(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """Set up the channel for PULSE alerts"""
-        # Check if user has Chairman role
-        if not any(role.name == 'Chairman' for role in interaction.user.roles):
+        # Check if user has Magnate role
+        if not any(role.name == 'Magnate' for role in interaction.user.roles):
             await interaction.response.send_message(
-                "⚠️ Only Chairman can configure the alert channel.",
+                "⚠️ Only Magnate can configure the alert channel.",
                 ephemeral=True
             )
             return

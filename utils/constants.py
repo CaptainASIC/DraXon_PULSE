@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 # Version info
-APP_VERSION = "1.1.2"
+APP_VERSION = "1.1.3"
 BUILD_DATE = "Dec 2024"
 
 # Role configuration

@@ -11,26 +11,96 @@ from utils.database import Database
 
 logger = logging.getLogger('PULSE.emergency')
 
-class SOSModal(discord.ui.Modal, title='PULSE Emergency Alert'):
+class SOSModal(discord.ui.Modal):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(title='PULSE Emergency Alert')
         self.location = discord.ui.TextInput(
             label='What is your current location?',
             placeholder='Enter your location here...',
             required=True,
-            max_length=100,
-            custom_id='location'
+            max_length=100
         )
         self.reason = discord.ui.TextInput(
             label='Emergency Description',
             placeholder='Briefly describe your emergency situation...',
             required=True,
             max_length=200,
-            style=discord.TextStyle.paragraph,
-            custom_id='reason'
+            style=discord.TextStyle.paragraph
         )
         self.add_item(self.location)
         self.add_item(self.reason)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        cog = interaction.client.get_cog('EmergencyCog')
+        if not cog:
+            await interaction.response.send_message(
+                "⚠️ System error. Please try again later.",
+                ephemeral=True
+            )
+            return
+
+        try:
+            # Get alert channel
+            alert_channel_id = cog.db.get_config('alert_channel')
+            if not alert_channel_id:
+                await interaction.response.send_message(
+                    "⚠️ Alert channel not configured. Please contact an administrator.",
+                    ephemeral=True
+                )
+                return
+
+            channel = interaction.client.get_channel(int(alert_channel_id))
+            if not channel:
+                await interaction.response.send_message(
+                    "⚠️ Alert channel not found. Please contact an administrator.",
+                    ephemeral=True
+                )
+                return
+
+            # Create alert message
+            alert_message = await channel.send(
+                f"🚨 **PULSE EMERGENCY ALERT** 🚨\n\n"
+                f"**Alert from:** {interaction.user.mention}\n"
+                f"**Location:** {self.location.value}\n"
+                f"**Situation:** {self.reason.value}\n\n"
+                f"*This is a priority alert from the PULSE system*"
+            )
+
+            # Create thread
+            thread = await alert_message.create_thread(
+                name=f"Emergency: {interaction.user.name} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                auto_archive_duration=1440
+            )
+
+            await thread.send(
+                f"Emergency thread created for {interaction.user.mention}'s alert.\n"
+                f"Please use this thread to coordinate response efforts."
+            )
+
+            # Log alert
+            cog.db.log_alert(
+                interaction.user.id,
+                self.location.value,
+                self.reason.value,
+                thread.id
+            )
+
+            # Set cooldown
+            cog.cooldowns[interaction.user.id] = datetime.now()
+
+            await interaction.response.send_message(
+                "🚨 Emergency alert posted successfully.\n"
+                "A thread has been created to track this emergency.\n"
+                "Please monitor the alert channel for responses.",
+                ephemeral=True
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to process emergency alert: {str(e)}", exc_info=True)
+            await interaction.response.send_message(
+                "An error occurred while processing your emergency alert. Please try again or contact an administrator.",
+                ephemeral=True
+            )
 
 class EmergencyCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -89,101 +159,6 @@ class EmergencyCog(commands.Cog):
                 "Failed to create emergency alert form. Please try again.",
                 ephemeral=True
             )
-
-    @commands.Cog.listener()
-    async def on_modal_submit(self, interaction: discord.Interaction):
-        if not isinstance(interaction.custom_id, str) or not hasattr(interaction, 'data'):
-            return
-
-        try:
-            # Get alert channel before any other operations
-            alert_channel_id = self.db.get_config('alert_channel')
-            if not alert_channel_id:
-                await interaction.response.send_message(
-                    "⚠️ Alert channel configuration not found. Please contact an administrator.",
-                    ephemeral=True
-                )
-                return
-
-            channel = self.bot.get_channel(int(alert_channel_id))
-            if not channel:
-                await interaction.response.send_message(
-                    "⚠️ Alert channel not found. Please contact an administrator.",
-                    ephemeral=True
-                )
-                return
-
-            # Extract modal data
-            components = interaction.data.get('components', [])
-            location = next((
-                comp['components'][0]['value'] 
-                for comp in components 
-                if comp['components'][0]['custom_id'] == 'location'
-            ), None)
-            reason = next((
-                comp['components'][0]['value'] 
-                for comp in components 
-                if comp['components'][0]['custom_id'] == 'reason'
-            ), None)
-
-            if not location or not reason:
-                await interaction.response.send_message(
-                    "⚠️ Invalid form submission. Please try again.",
-                    ephemeral=True
-                )
-                return
-
-            # Create alert message
-            alert_message = await channel.send(
-                f"🚨 **PULSE EMERGENCY ALERT** 🚨\n\n"
-                f"**Alert from:** {interaction.user.mention}\n"
-                f"**Location:** {location}\n"
-                f"**Situation:** {reason}\n\n"
-                f"*This is a priority alert from the PULSE system*"
-            )
-
-            # Create thread
-            thread = await alert_message.create_thread(
-                name=f"Emergency: {interaction.user.name} - {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-                auto_archive_duration=1440
-            )
-
-            await thread.send(
-                f"Emergency thread created for {interaction.user.mention}'s alert.\n"
-                f"Please use this thread to coordinate response efforts."
-            )
-
-            # Log alert
-            self.db.log_alert(
-                interaction.user.id,
-                location,
-                reason,
-                thread.id
-            )
-
-            # Set cooldown
-            self.cooldowns[interaction.user.id] = datetime.now()
-
-            await interaction.response.send_message(
-                "🚨 Emergency alert posted successfully.\n"
-                "A thread has been created to track this emergency.\n"
-                "Please monitor the alert channel for responses.",
-                ephemeral=True
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to process emergency alert: {str(e)}", exc_info=True)
-            try:
-                await interaction.response.send_message(
-                    "An error occurred while processing your emergency alert. Please try again or contact an administrator.",
-                    ephemeral=True
-                )
-            except:
-                # If response was already sent, try followup
-                await interaction.followup.send(
-                    "An error occurred while processing your emergency alert. Please try again or contact an administrator.",
-                    ephemeral=True
-                )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EmergencyCog(bot))
